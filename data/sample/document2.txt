@@ -1,0 +1,56 @@
+Multithreaded Programming with C++
+
+Modern C++ provides excellent tools for concurrent programming. This document
+covers the key synchronization primitives available in the C++ standard library.
+
+Thread Management
+-----------------
+std::thread creates an OS thread. Always join or detach threads before
+the thread object is destroyed to avoid std::terminate being called.
+
+  std::thread t([]() { doWork(); });
+  t.join();
+
+Mutexes
+-------
+std::mutex provides exclusive ownership. Use RAII wrappers:
+  - std::lock_guard   : simple scoped lock
+  - std::unique_lock  : flexible lock (can unlock, try_lock, timed_lock)
+  - std::shared_lock  : shared (read) ownership with std::shared_mutex
+
+Condition Variables
+-------------------
+std::condition_variable enables threads to wait efficiently for a condition:
+
+  std::mutex mu;
+  std::condition_variable cv;
+  bool ready = false;
+
+  // Consumer:
+  std::unique_lock<std::mutex> lock(mu);
+  cv.wait(lock, [&]{ return ready; });
+
+  // Producer:
+  { std::lock_guard<std::mutex> lk(mu); ready = true; }
+  cv.notify_one();
+
+Atomic Operations
+-----------------
+std::atomic<T> provides lock-free operations for simple types:
+  - fetch_add, fetch_sub  : arithmetic
+  - compare_exchange_strong / weak : CAS operations
+  - load / store with memory ordering
+
+Thread Pool Pattern
+-------------------
+A thread pool amortizes thread creation cost. Workers block on a shared queue,
+pop tasks, and execute them. This pattern is used throughout this search engine
+to parallelize file indexing across multiple CPU cores.
+
+Performance Considerations
+--------------------------
+- Minimize lock contention: use sharded data structures
+- Prefer fine-grained locking over coarse-grained global locks
+- Use lock-free algorithms where applicable (std::atomic)
+- Profile before optimizing: Amdahl's law limits parallel speedup
+- False sharing: pad frequently-written atomic variables to cache line size

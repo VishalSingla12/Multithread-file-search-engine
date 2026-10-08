@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Build
+build/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Generated index
+index.bin
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
